@@ -7,7 +7,7 @@ from aiogram.filters import Command
 
 # 1. BOT SOZLAMALARI
 TOKEN = "8715520167:AAFPa-1OBsEQJVuwfWtCDF6oYHxlxGQqpDg"
-ADMIN_ID = 6516654407
+ADMIN_ID = 8541985358
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -27,23 +27,45 @@ def keep_alive():
     t.start()
 
 # 3. BOT FUNKSIYALARI
-@dp.message(Command("start"))
-async def start_handler(message: types.Message):
-    await message.answer("Assalomu alaykum! Savolingizni yozing.")
-
 @dp.message()
 async def handle_messages(message: types.Message):
+    # Agar xabar Admindan kelmagan bo'lsa (ya'ni foydalanuvchi yozsa)
     if message.from_user.id != ADMIN_ID:
-        user_info = f"👤 Ism: {message.from_user.full_name}\n🆔 User_ID: {message.from_user.id}\n💬 Xabar: {message.text}\n\n⚠️ Javob berish uchun 'Reply' qiling."
-        await bot.send_message(chat_id=ADMIN_ID, text=user_info)
-    elif message.from_user.id == ADMIN_ID and message.reply_to_message:
-        original_text = message.reply_to_message.text
-        match = re.search(r"User_ID:\s(\d+)", original_text)
-        if match:
-            user_id = int(match.group(1))
-            await bot.send_message(chat_id=user_id, text=f"Admin javobi:\n\n{message.text}")
-            await message.answer("✅ Javob yuborildi.")
+        # Username bor yoki yo'qligini tekshirish
+        user_name = f"@{message.from_user.username}" if message.from_user.username else "Mavjud emas"
+        
+        # Siz xohlagan chiroyli format (rasmdagidek)
+        admin_message = (
+            f"📩 **Yangi xabar!**\n"
+            f"👤 **Ism:** {message.from_user.full_name}\n"
+            f"🆔 **User_ID:** `{message.from_user.id}`\n"
+            f"🔗 **Username:** {user_name}\n"
+            f"------------------------------\n"
+            f"💬 **Xabar:** {message.text}\n"
+            f"------------------------------\n"
+            f"Javob berish uchun xabarga <<Reply>> qiling."
+        )
+        
+        # Adminga yuborish
+        await bot.send_message(chat_id=ADMIN_ID, text=admin_message, parse_mode="Markdown")
+        # Foydalanuvchiga tasdiq xabari
+        await message.answer("✅ Javobingiz yuborildi.")
 
+    # Agar Admin foydalanuvchiga javob yozsa (Reply qilsa)
+    elif message.reply_to_message:
+        try:
+            # Xabar ichidan User_ID ni qidirib topish
+            import re
+            match = re.search(r"User_ID: `(\d+)`", message.reply_to_message.text)
+            if match:
+                user_id = int(match.group(1))
+                # Foydalanuvchiga admin javobini yuborish
+                await bot.send_message(chat_id=user_id, text=f"**Bahriyya**💙\n\n{message.text}", parse_mode="Markdown")
+                await message.answer("✅ Javob yuborildi.")
+            else:
+                await message.answer("⚠️ Javob berish uchun 'Reply' qiling.")
+        except Exception as e:
+            await message.answer(f"❌ Xatolik yuz berdi: {e}")
 async def main():
     keep_alive() # Serverni ishga tushirish
     print("Bot muvaffaqiyatli ishga tushdi...")
