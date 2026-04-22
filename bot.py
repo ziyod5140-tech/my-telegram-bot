@@ -7,7 +7,7 @@ from aiogram.filters import Command
 
 # 1. BOT SOZLAMALARI
 TOKEN = "8715520167:AAFPa-1OBsEQJVuwfWtCDF6oYHxlxGQqpDg"
-ADMIN_ID = 8541985358 
+ADMIN_ID = 6516654407
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
